@@ -1,0 +1,82 @@
+---
+import { Icon } from "astro-icon/components";
+---
+
+<button id="back-to-top-btn" aria-label="Back to Top" class="back-to-top-btn btn-card hide">
+    <Icon name="material-symbols:keyboard-arrow-up-rounded" />
+</button>
+
+<style lang="stylus">
+.back-to-top-btn
+    position: fixed
+    right: 1.5rem
+    bottom: 10rem
+    width: 3.75rem
+    height: 3.75rem
+    z-index: 100
+    
+    display: flex
+    align-items: center
+    justify-content: center
+    
+    color: var(--primary)
+    border: none
+    border-radius: 1rem
+    
+    opacity: 0.6
+    cursor: pointer
+    transition: transform 0.3s ease, opacity 0.3s ease, box-shadow 0.3s ease
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15)
+    
+    svg
+        width: 1.75rem
+        height: 1.75rem
+    
+    &.hide
+        transform: scale(0)
+        opacity: 0
+        pointer-events: none
+    
+    &:hover
+        opacity: 1
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2)
+    
+    &:active
+        transform: scale(0.9)
+
+    @media (max-width: 768px)
+        width: 3rem
+        height: 3rem
+        right: 1rem
+        bottom: 6rem
+        border-radius: 0.75rem
+        svg
+            width: 1.5rem
+            height: 1.5rem
+</style>
+
+<script>
+const btn = document.getElementById('back-to-top-btn');
+let ticking = false;
+
+function updateBtnVisibility() {
+    btn?.classList.toggle('hide', window.scrollY <= 100);
+}
+
+// 初始检查
+updateBtnVisibility();
+
+window.addEventListener('scroll', () => {
+    if (ticking) return;
+    ticking = true;
+    
+    requestAnimationFrame(() => {
+        updateBtnVisibility();
+        ticking = false;
+    });
+}, { passive: true });
+
+btn?.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+</script>
