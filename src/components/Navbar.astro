@@ -8,6 +8,7 @@ import LightDarkSwitch from "./LightDarkSwitch.svelte";
 import Search from "./Search.svelte";
 import DisplaySettings from "./widget/DisplaySettings.svelte";
 import NavMenuPanel from "./widget/NavMenuPanel.astro";
+
 const className = Astro.props.class;
 
 let links: NavBarLink[] = navBarConfig.links.map(
@@ -32,7 +33,9 @@ let links: NavBarLink[] = navBarConfig.links.map(
         </a>
         <div class="hidden md:flex">
             {links.map((l) => {
-                return <a aria-label={l.name} href={l.external ? l.url : url(l.url)} target={l.external ? "_blank" : null}
+                return <a aria-label={l.name} href={l.external ? l.url : url(l.url)}
+                          target={l.external ? "_blank" : null}
+                          rel={l.external ? "noopener noreferrer" : null}
                           class="btn-plain scale-animation rounded-lg h-11 font-bold px-5 active:scale-95"
                 >
                     <div class="flex items-center">
@@ -63,26 +66,18 @@ let links: NavBarLink[] = navBarConfig.links.map(
 </div>
 
 <script>
-function loadButtonScript() {
-    let settingBtn = document.getElementById("display-settings-switch");
-    if (settingBtn) {
-        settingBtn.onclick = function () {
-            let settingPanel = document.getElementById("display-setting");
-            if (settingPanel) {
-                settingPanel.classList.toggle("float-panel-closed");
-            }
-        };
-    }
+function bindPanelToggle(btnId: string, panelId: string) {
+    const btn = document.getElementById(btnId);
+    if (!btn || btn.dataset.bound === "true") return;
+    btn.dataset.bound = "true";
+    btn.addEventListener("click", () => {
+        document.getElementById(panelId)?.classList.toggle("float-panel-closed");
+    });
+}
 
-    let menuBtn = document.getElementById("nav-menu-switch");
-    if (menuBtn) {
-        menuBtn.onclick = function () {
-            let menuPanel = document.getElementById("nav-menu-panel");
-            if (menuPanel) {
-                menuPanel.classList.toggle("float-panel-closed");
-            }
-        };
-    }
+function loadButtonScript() {
+    bindPanelToggle("display-settings-switch", "display-setting");
+    bindPanelToggle("nav-menu-switch", "nav-menu-panel");
 }
 
 loadButtonScript();

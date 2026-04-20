@@ -7,11 +7,25 @@ interface PagefindResult {
 	excerpt: string;
 }
 
+interface PagefindSearchResult {
+	results: Array<{ data: () => Promise<PagefindResult> }>;
+}
+
+interface PagefindApi {
+	init: () => Promise<void>;
+	preload: (term: string) => void;
+	debouncedSearch: (
+		term: string,
+		options: Record<string, unknown>,
+		debounceMs: number,
+	) => Promise<PagefindSearchResult | null>;
+}
+
 let query = $state("");
 let results = $state<PagefindResult[]>([]);
 let loading = $state(false);
 let show = $state(false);
-let pagefind: any = null;
+let pagefind: PagefindApi | null = null;
 
 function clickOutside(node: HTMLElement, cb: () => void) {
 	const onClick = (e: MouseEvent) => {
@@ -48,7 +62,7 @@ async function loadPagefind() {
 	if (pagefind) return pagefind;
 	try {
 		const pagefindPath = "/pagefind/pagefind.js";
-		pagefind = await import(/* @vite-ignore */ pagefindPath);
+		pagefind = (await import(/* @vite-ignore */ pagefindPath)) as PagefindApi;
 		await pagefind.init();
 		return pagefind;
 	} catch {
@@ -93,6 +107,9 @@ async function handleSearch(term: string) {
 			meta: r.meta,
 			excerpt: r.excerpt,
 		}));
+	} catch (err) {
+		console.warn("Pagefind search failed", err);
+		results = [];
 	} finally {
 		loading = false;
 	}

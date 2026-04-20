@@ -12,10 +12,17 @@ interface Props {
 }
 
 import { Image } from "astro:assets";
-import { url } from "../../utils/url-utils";
 import { siteConfig } from "../../config";
+import { url } from "../../utils/url-utils";
 
-const { id, src, alt, position = "center", basePath = "/", fetchpriority } = Astro.props;
+const {
+	id,
+	src,
+	alt,
+	position = "center",
+	basePath = "/",
+	fetchpriority,
+} = Astro.props;
 const className = Astro.props.class;
 
 const isLocal = !(
@@ -26,15 +33,14 @@ const isLocal = !(
 );
 const isPublic = src.startsWith("/");
 
-// TODO temporary workaround for images dynamic import
 // https://github.com/withastro/astro/issues/3373
-// biome-ignore lint/suspicious/noImplicitAnyLet: <check later>
-let img;
+let img: ImageMetadata | undefined;
 if (isLocal) {
-	const files = import.meta.glob<ImageMetadata>("../../**", {
-		import: "default",
-	});
-	let normalizedPath = path
+	const files = import.meta.glob<ImageMetadata>(
+		"../../**/*.{png,jpg,jpeg,webp,gif,avif,svg}",
+		{ import: "default" },
+	);
+	const normalizedPath = path
 		.normalize(path.join("../../", basePath, src))
 		.replace(/\\/g, "/");
 	const file = files[normalizedPath];
