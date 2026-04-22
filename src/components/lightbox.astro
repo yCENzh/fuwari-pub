@@ -43,26 +43,23 @@ function destroyFancybox() {
 	Fancybox.close();
 }
 
-// swup 是本项目的主切页系统，使用其 hooks 统一处理。
-// 如果 swup 尚未就绪，回退到一次性的 DOMContentLoaded 初始化。
+// swup 是本项目的主切页系统，后续切页由其 hooks 负责 destroy / recreate。
+// 首屏绑定独立于 swup：因为当此脚本执行时 swup 的初始 page:view 可能已派发，
+// 光注册 hook 会漏掉首屏，所以无论 swup 是否就绪都直接 create 一次。
 function bindSwupHooks() {
-	const swup = (window as unknown as { swup?: { hooks: {
-		on: (event: string, cb: () => void) => void;
-	} } }).swup;
-	if (!swup) return false;
-	swup.hooks.on("page:view", createFancybox);
-	swup.hooks.on("visit:start", destroyFancybox);
+	if (!window.swup) return false;
+	window.swup.hooks.on("page:view", createFancybox);
+	window.swup.hooks.on("visit:start", destroyFancybox);
 	return true;
 }
 
 if (!bindSwupHooks()) {
 	document.addEventListener("swup:enable", bindSwupHooks, { once: true });
-	if (document.readyState === "loading") {
-		document.addEventListener("DOMContentLoaded", createFancybox, {
-			once: true,
-		});
-	} else {
-		createFancybox();
-	}
+}
+
+if (document.readyState === "loading") {
+	document.addEventListener("DOMContentLoaded", createFancybox, { once: true });
+} else {
+	createFancybox();
 }
 </script>
