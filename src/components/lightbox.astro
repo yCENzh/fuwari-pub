@@ -7,49 +7,43 @@ import { Fancybox } from "@fancyapps/ui";
 
 const GALLERY_SELECTOR = ".custom-md img, #post-cover img";
 
-const fancyboxOptions = {
-	dragToClose: false,
-	Toolbar: {
-		display: {
-			left: ["infobar"],
-			middle: [],
-			right: ["close"],
-		},
-	},
-	closeButton: false,
-	click: false,
-	dblclick: false,
-	wheel: "slide",
-};
+// Fancybox.bind 是 document.body 级委托，绑一次即永久生效；
+// swup 只替换内容容器，委托不受影响，因此无需在每次切页重绑。
+let bound = false;
 
-function createFancybox() {
-	const images = document.querySelectorAll<HTMLImageElement>(GALLERY_SELECTOR);
-	if (images.length === 0) return;
-
-	for (const imageElement of images) {
-		if (imageElement.hasAttribute("data-fancybox")) continue;
-		imageElement.setAttribute("data-fancybox", "gallery");
-		if (imageElement.alt && !imageElement.hasAttribute("data-caption")) {
-			imageElement.setAttribute("data-caption", imageElement.alt);
-		}
+function decorate() {
+	for (const img of document.querySelectorAll<HTMLImageElement>(
+		GALLERY_SELECTOR,
+	)) {
+		if (img.hasAttribute("data-fancybox")) continue;
+		img.setAttribute("data-fancybox", "gallery");
+		if (img.alt) img.setAttribute("data-caption", img.alt);
 	}
 
-	// biome-ignore lint/suspicious/noExplicitAny: @fancyapps/ui does not export OptionsType
-	Fancybox.bind(GALLERY_SELECTOR, fancyboxOptions as any);
+	if (!bound) {
+		Fancybox.bind(GALLERY_SELECTOR, {
+			dragToClose: false,
+			Toolbar: {
+				display: {
+					left: ["infobar"],
+					middle: [],
+					right: ["close"],
+				},
+			},
+			closeButton: false,
+			click: false,
+			dblclick: false,
+			wheel: "slide",
+			// biome-ignore lint/suspicious/noExplicitAny: @fancyapps/ui does not export OptionsType
+		} as any);
+		bound = true;
+	}
 }
 
-function destroyFancybox() {
-	Fancybox.unbind(GALLERY_SELECTOR);
-	Fancybox.close();
-}
-
-// swup 是本项目的主切页系统，后续切页由其 hooks 负责 destroy / recreate。
-// 首屏绑定独立于 swup：因为当此脚本执行时 swup 的初始 page:view 可能已派发，
-// 光注册 hook 会漏掉首屏，所以无论 swup 是否就绪都直接 create 一次。
 function bindSwupHooks() {
 	if (!window.swup) return false;
-	window.swup.hooks.on("page:view", createFancybox);
-	window.swup.hooks.on("visit:start", destroyFancybox);
+	window.swup.hooks.on("page:view", decorate);
+	window.swup.hooks.on("visit:start", () => Fancybox.close());
 	return true;
 }
 
@@ -57,9 +51,10 @@ if (!bindSwupHooks()) {
 	document.addEventListener("swup:enable", bindSwupHooks, { once: true });
 }
 
+// 首屏独立触发：swup 的初始 page:view 可能在本脚本之前已派发。
 if (document.readyState === "loading") {
-	document.addEventListener("DOMContentLoaded", createFancybox, { once: true });
+	document.addEventListener("DOMContentLoaded", decorate, { once: true });
 } else {
-	createFancybox();
+	decorate();
 }
 </script>
