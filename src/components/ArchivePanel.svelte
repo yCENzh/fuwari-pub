@@ -1,25 +1,25 @@
 <script lang="ts">
 import { onMount } from "svelte";
-import { getPostUrlBySlug } from "../utils/url-utils";
 import { formatDateToMMDD } from "../utils/date-utils";
+import { getPostUrlBySlug } from "../utils/url-utils";
 
 interface Post {
-    id: string;
-    data: {
-        title: string;
-        tags: string[];
-        category: string | null;
-        published: Date;
-    };
+	id: string;
+	data: {
+		title: string;
+		tags: string[];
+		category: string | null;
+		published: Date;
+	};
 }
 
 interface Group {
-    year: number;
-    posts: Post[];
+	year: number;
+	posts: Post[];
 }
 
 interface Props {
-    sortedPosts?: Post[];
+	sortedPosts?: Post[];
 }
 
 let { sortedPosts = [] }: Props = $props();
@@ -31,55 +31,59 @@ let groups = $state<Group[]>([]);
  * @returns 格式化后的标签字符串
  */
 function formatTag(tagList: string[]) {
-    return tagList?.map((t) => `#${t}`).join(" ") || "";
+	return tagList?.map((t) => `#${t}`).join(" ") || "";
 }
 
 onMount(async () => {
-    // 从URL查询参数中获取过滤条件
-    const params = new URLSearchParams(window.location.search);
-    const urlTags = params.getAll("tag");
-    const urlCategories = params.getAll("category");
-    const uncategorized = params.has("uncategorized");
+	// 从URL查询参数中获取过滤条件
+	const params = new URLSearchParams(window.location.search);
+	const urlTags = params.getAll("tag");
+	const urlCategories = params.getAll("category");
+	const uncategorized = params.has("uncategorized");
 
-    // 初始化为全部文章
-    let filteredPosts: Post[] = [...sortedPosts];
+	// 初始化为全部文章
+	let filteredPosts: Post[] = [...sortedPosts];
 
-    // 根据标签过滤
-    if (urlTags.length > 0) {
-        filteredPosts = filteredPosts.filter(
-            (post) =>
-                Array.isArray(post.data.tags) &&
-                urlTags.some((tag) => post.data.tags.includes(tag))
-        );
-    }
+	// 根据标签过滤
+	if (urlTags.length > 0) {
+		filteredPosts = filteredPosts.filter(
+			(post) =>
+				Array.isArray(post.data.tags) &&
+				urlTags.some((tag) => post.data.tags.includes(tag)),
+		);
+	}
 
-    // 根据分类过滤
-    if (urlCategories.length > 0) {
-        filteredPosts = filteredPosts.filter(
-            (post) => post.data.category && urlCategories.includes(post.data.category)
-        );
-    }
+	// 根据分类过滤
+	if (urlCategories.length > 0) {
+		filteredPosts = filteredPosts.filter(
+			(post) =>
+				post.data.category && urlCategories.includes(post.data.category),
+		);
+	}
 
-    // 过滤未分类文章
-    if (uncategorized) {
-        filteredPosts = filteredPosts.filter((post) => !post.data.category);
-    }
+	// 过滤未分类文章
+	if (uncategorized) {
+		filteredPosts = filteredPosts.filter((post) => !post.data.category);
+	}
 
-    // 按年份分组文章
-    const grouped = filteredPosts.reduce((acc, post) => {
-        const year = post.data.published.getFullYear();
-        if (!acc[year]) acc[year] = [];
-        acc[year].push(post);
-        return acc;
-    }, {} as Record<number, Post[]>);
+	// 按年份分组文章
+	const grouped = filteredPosts.reduce(
+		(acc, post) => {
+			const year = post.data.published.getFullYear();
+			if (!acc[year]) acc[year] = [];
+			acc[year].push(post);
+			return acc;
+		},
+		{} as Record<number, Post[]>,
+	);
 
-    // 将分组对象转换为数组并按年份降序排序
-    groups = Object.entries(grouped)
-        .map(([year, posts]) => ({
-            year: parseInt(year),
-            posts,
-        }))
-        .sort((a, b) => b.year - a.year);
+	// 将分组对象转换为数组并按年份降序排序
+	groups = Object.entries(grouped)
+		.map(([year, posts]) => ({
+			year: Number.parseInt(year),
+			posts,
+		}))
+		.sort((a, b) => b.year - a.year);
 });
 </script>
 
