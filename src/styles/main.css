@@ -1,9 +1,9 @@
 @import 'tailwindcss';
 
 @import './variables.css';
-@import './navbar.css' layer(base);
-@import './scrollbar.css' layer(base);
-@import './transition.css' layer(base);
+@import './navbar.css';
+@import './scrollbar.css';
+@import './transition.css';
 @import './markdown.utilities.css';
 @import './markdown-extend.css';
 @import './expressive-code.css';
